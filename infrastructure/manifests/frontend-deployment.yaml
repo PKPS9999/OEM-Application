@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oem-seller-web
+  namespace: oem-seller
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: oem-seller-web
+  template:
+    metadata:
+      labels:
+        app: oem-seller-web
+    spec:
+      containers:
+      - name: oem-seller-web
+        image: oemselleracr.azurecr.io/oem-seller-web:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"

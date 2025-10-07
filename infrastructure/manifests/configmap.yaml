@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oem-seller-config
+  namespace: oem-seller
+data:
+  DATABASE_HOST: "oem-seller-db-service"
+  DATABASE_PORT: "1433"
+  REDIS_HOST: "redis-service"
+  REDIS_PORT: "6379"
+  JWT_ISSUER: "OEMSellerPlatform"
+  JWT_AUDIENCE: "OEMSellerPlatformUsers"

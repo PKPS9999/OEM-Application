@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  # SQL Server
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: oem-seller-sql
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: YourStrong@Passw0rd
+      MSSQL_PID: Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - oem-seller-network
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: oem-seller-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - oem-seller-network
+
+  # Product Service
+  oemproduct-service:
+    build:
+      context: ./backend/OEMProductService
+      dockerfile: Dockerfile
+    container_name: oemproduct-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=OEMProductServiceDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true
+      - Jwt__Key=YourSuperSecretKeyThatIsAtLeast256BitsLong!
+      - Jwt__Issuer=OEMSellerPlatform
+      - Jwt__Audience=OEMSellerPlatformUsers
+    ports:
+      - "5001:80"
+    depends_on:
+      - sqlserver
+      - redis
+    networks:
+      - oem-seller-network
+
+  # User Management Service
+  usermanagement-service:
+    build:
+      context: ./backend/UserManagementService
+      dockerfile: Dockerfile
+    container_name: usermanagement-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=UserManagementServiceDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true
+      - Jwt__Key=YourSuperSecretKeyThatIsAtLeast256BitsLong!
+      - Jwt__Issuer=OEMSellerPlatform
+      - Jwt__Audience=OEMSellerPlatformUsers
+    ports:
+      - "5002:80"
+    depends_on:
+      - sqlserver
+      - redis
+    networks:
+      - oem-seller-network
+
+  # Order Management Service
+  ordermanagement-service:
+    build:
+      context: ./backend/OrderManagementService
+      dockerfile: Dockerfile
+    container_name: ordermanagement-service
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=OrderManagementServiceDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true
+      - Jwt__Key=YourSuperSecretKeyThatIsAtLeast256BitsLong!
+      - Jwt__Issuer=OEMSellerPlatform
+      - Jwt__Audience=OEMSellerPlatformUsers
+    ports:
+      - "5003:80"
+    depends_on:
+      - sqlserver
+      - redis
+    networks:
+      - oem-seller-network
+
+  # Frontend
+  oem-seller-web:
+    build:
+      context: ./frontend/oem-seller-web
+      dockerfile: Dockerfile
+    container_name: oem-seller-web
+    environment:
+      - REACT_APP_API_BASE_URL=http://localhost:5000
+    ports:
+      - "3000:80"
+    depends_on:
+      - oemproduct-service
+      - usermanagement-service
+      - ordermanagement-service
+    networks:
+      - oem-seller-network
+
+volumes:
+  sqlserver_data:
+  redis_data:
+
+networks:
+  oem-seller-network:
+    driver: bridge

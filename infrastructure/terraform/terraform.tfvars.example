@@ -1,0 +1,13 @@
+# Copy this file to terraform.tfvars and update with your values
+
+resource_group_name = "oem-seller-rg"
+location           = "East US"
+acr_name          = "oemselleracr"
+aks_cluster_name  = "oem-seller-aks"
+sql_admin_password = "YourStrongPassword123!"
+
+common_tags = {
+  Project     = "OEM Seller Platform"
+  Environment = "Production"
+  Owner       = "Your Team"
+}

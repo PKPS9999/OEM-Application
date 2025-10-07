@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: oem-seller-ingress
+  namespace: oem-seller
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: oem-seller.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: oem-seller-web-service
+            port:
+              number: 80
+      - path: /api/products
+        pathType: Prefix
+        backend:
+          service:
+            name: oemproduct-service
+            port:
+              number: 80
